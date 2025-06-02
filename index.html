@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Fisika: Energi & Pemanasan Global</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .option-button {
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .option-button:hover {
+            transform: translateY(-2px);
+        }
+        .correct {
+            background-color: #22c55e !important; /* Tailwind green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* Tailwind green-600 */
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* Tailwind red-600 */
+        }
+        .selected {
+            border-width: 2px;
+        }
+        /* Custom scrollbar for explanation */
+        .explanation-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .explanation-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .explanation-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .explanation-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+    <div id="quiz-container" class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
+        <div id="header" class="mb-6 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-sky-700">Kuis Fisika Kelas 10</h1>
+            <p class="text-sm text-slate-500">Materi: Energi dan Pemanasan Global (Kurikulum Merdeka)</p>
+        </div>
+
+        <div id="question-area" class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <p id="question-counter" class="text-sm font-medium text-sky-600"></p>
+                <p id="score" class="text-sm font-medium text-emerald-600">Skor: 0</p>
+            </div>
+            <div id="question-text" class="text-lg font-semibold mb-4 p-4 bg-sky-50 rounded-lg border border-sky-200 min-h-[80px]"></div>
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                </div>
+        </div>
+
+        <div id="feedback-area" class="mb-6 hidden">
+            <h3 id="feedback-text" class="text-xl font-bold mb-2"></h3>
+            <div id="explanation-text" class="text-sm p-3 bg-slate-50 rounded-lg border border-slate-200 explanation-content max-h-32 overflow-y-auto"></div>
+        </div>
+
+        <div id="navigation-area" class="text-center">
+            <button id="next-question-button" class="bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out w-full sm:w-auto disabled:opacity-50" disabled>Pertanyaan Berikutnya</button>
+        </div>
+
+        <div id="results-area" class="hidden text-center">
+            <h2 class="text-2xl font-bold mb-4 text-sky-700">Hasil Kuis Selesai!</h2>
+            <p id="final-score" class="text-xl mb-2"></p>
+            <p id="final-message" class="text-md mb-6"></p>
+            <button id="restart-quiz-button" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out">Mulai Ulang Kuis</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Soal Kuis ---
+        const questions = [
+            {
+                question: "Energi yang dimiliki oleh benda karena posisinya terhadap suatu acuan ketinggian disebut...",
+                options: ["Energi Kinetik", "Energi Potensial Gravitasi", "Energi Mekanik", "Energi Termal"],
+                correctAnswer: 1,
+                explanation: "Energi Potensial Gravitasi adalah energi yang dimiliki benda karena ketinggiannya. Rumusnya Ep = mgh, di mana m adalah massa, g adalah percepatan gravitasi, dan h adalah ketinggian."
+            },
+            {
+                question: "Sebuah apel jatuh dari pohon. Perubahan energi utama yang terjadi adalah...",
+                options: ["Kinetik menjadi Potensial", "Potensial menjadi Kinetik", "Termal menjadi Kinetik", "Kinetik menjadi Termal"],
+                correctAnswer: 1,
+                explanation: "Saat apel berada di pohon, ia memiliki energi potensial maksimal. Ketika jatuh, energi potensialnya berkurang dan berubah menjadi energi kinetik (energi gerak)."
+            },
+            {
+                question: "Hukum Kekekalan Energi menyatakan bahwa...",
+                options: ["Energi dapat diciptakan", "Energi dapat dimusnahkan", "Energi tidak dapat diciptakan atau dimusnahkan, hanya dapat berubah bentuk", "Energi selalu berkurang seiring waktu"],
+                correctAnswer: 2,
+                explanation: "Hukum Kekekalan Energi adalah prinsip dasar fisika yang menyatakan bahwa total energi dalam sistem terisolasi tetap konstan; energi hanya dapat diubah dari satu bentuk ke bentuk lainnya."
+            },
+            {
+                question: "Berikut ini yang BUKAN merupakan sumber energi terbarukan adalah...",
+                options: ["Tenaga Surya", "Tenaga Angin", "Batu Bara", "Panas Bumi (Geotermal)"],
+                correctAnswer: 2,
+                explanation: "Batu bara adalah sumber energi fosil yang tidak terbarukan. Tenaga surya, angin, dan panas bumi adalah contoh sumber energi terbarukan yang dapat diperbarui secara alami."
+            },
+            {
+                question: "Satuan usaha dalam Sistem Internasional (SI) adalah...",
+                options: ["Watt", "Newton", "Joule", "Pascal"],
+                correctAnswer: 2,
+                explanation: "Joule (J) adalah satuan SI untuk usaha dan energi. Watt adalah satuan daya, Newton adalah satuan gaya, dan Pascal adalah satuan tekanan."
+            },
+            {
+                question: "Daya didefinisikan sebagai...",
+                options: ["Jumlah energi total", "Laju melakukan usaha atau transfer energi", "Kemampuan melakukan usaha", "Perubahan energi potensial"],
+                correctAnswer: 1,
+                explanation: "Daya (Power) adalah laju di mana usaha dilakukan atau energi ditransfer per satuan waktu. Satuan daya adalah Watt (Joule/detik)."
+            },
+            {
+                question: "Sebuah lampu 60 Watt menyala selama 10 jam. Energi listrik yang digunakan adalah...",
+                options: ["0.6 kWh", "6 kWh", "600 kWh", "60 Wh"],
+                correctAnswer: 0,
+                explanation: "Energi (E) = Daya (P) x Waktu (t). P = 60 W = 0.06 kW. t = 10 jam. Maka E = 0.06 kW x 10 jam = 0.6 kWh."
+            },
+            {
+                question: "Efek rumah kaca adalah fenomena di mana...",
+                options: ["Atmosfer memantulkan semua radiasi matahari", "Gas-gas tertentu di atmosfer memerangkap panas matahari", "Lapisan ozon menipis drastis", "Suhu bumi menurun secara global"],
+                correctAnswer: 1,
+                explanation: "Efek rumah kaca adalah proses alami di mana gas-gas tertentu (gas rumah kaca) di atmosfer Bumi memerangkap sebagian panas dari Matahari, menjaga Bumi tetap hangat dan layak huni. Namun, peningkatan konsentrasi gas ini menyebabkan pemanasan global."
+            },
+            {
+                question: "Gas rumah kaca utama yang paling banyak berkontribusi terhadap pemanasan global akibat aktivitas manusia adalah...",
+                options: ["Oksigen (O2)", "Nitrogen (N2)", "Karbondioksida (CO2)", "Argon (Ar)"],
+                correctAnswer: 2,
+                explanation: "Karbondioksida (CO2) adalah gas rumah kaca yang paling signifikan kontribusinya terhadap pemanasan global, terutama berasal dari pembakaran bahan bakar fosil dan deforestasi."
+            },
+            {
+                question: "Berikut ini yang merupakan dampak dari pemanasan global adalah...",
+                options: ["Penurunan permukaan air laut", "Peningkatan frekuensi cuaca ekstrem", "Pendinginan suhu rata-rata global", "Peningkatan lapisan es di kutub"],
+                correctAnswer: 1,
+                explanation: "Pemanasan global menyebabkan berbagai dampak negatif, termasuk peningkatan frekuensi dan intensitas cuaca ekstrem (banjir, kekeringan, badai), kenaikan permukaan air laut, dan pencairan es di kutub."
+            },
+            {
+                question: "Salah satu cara untuk mengurangi emisi gas rumah kaca adalah...",
+                options: ["Meningkatkan penggunaan kendaraan pribadi berbahan bakar fosil", "Melakukan pembakaran hutan untuk lahan pertanian", "Menggunakan energi terbarukan seperti tenaga surya", "Meningkatkan konsumsi produk hewani secara masif"],
+                correctAnswer: 2,
+                explanation: "Menggunakan sumber energi terbarukan (seperti tenaga surya, angin, air) menggantikan bahan bakar fosil adalah salah satu cara efektif untuk mengurangi emisi gas rumah kaca."
+            },
+            {
+                question: "Energi kinetik sebuah mobil bermassa 1000 kg yang bergerak dengan kecepatan 20 m/s adalah...",
+                options: ["10.000 J", "20.000 J", "200.000 J", "400.000 J"],
+                correctAnswer: 2,
+                explanation: "Energi Kinetik (Ek) = 1/2 * m * v^2. Ek = 1/2 * 1000 kg * (20 m/s)^2 = 1/2 * 1000 * 400 = 200.000 Joule."
+            },
+            {
+                question: "Sebuah benda dengan massa 2 kg berada pada ketinggian 5 meter dari tanah (g = 10 m/s²). Energi potensial gravitasinya adalah...",
+                options: ["10 J", "20 J", "50 J", "100 J"],
+                correctAnswer: 3,
+                explanation: "Energi Potensial (Ep) = m * g * h. Ep = 2 kg * 10 m/s² * 5 m = 100 Joule."
+            },
+            {
+                question: "Proses perubahan energi dari energi kimia menjadi energi listrik terjadi pada...",
+                options: ["Lampu pijar", "Setrika listrik", "Baterai", "Kipas angin"],
+                correctAnswer: 2,
+                explanation: "Baterai mengubah energi kimia yang tersimpan di dalamnya menjadi energi listrik melalui reaksi redoks."
+            },
+            {
+                question: "Panel surya mengubah energi cahaya matahari menjadi energi...",
+                options: ["Kimia", "Mekanik", "Listrik", "Nuklir"],
+                correctAnswer: 2,
+                explanation: "Panel surya (sel fotovoltaik) secara langsung mengubah energi radiasi matahari (cahaya) menjadi energi listrik."
+            },
+            {
+                question: "Deforestasi atau penggundulan hutan berkontribusi pada pemanasan global karena...",
+                options: ["Mengurangi penyerapan CO2 dari atmosfer", "Menghasilkan lebih banyak oksigen", "Meningkatkan keanekaragaman hayati", "Menurunkan suhu lokal"],
+                correctAnswer: 0,
+                explanation: "Pohon menyerap karbondioksida (CO2) dari atmosfer melalui fotosintesis. Penggundulan hutan mengurangi kemampuan alam untuk menyerap CO2, sehingga konsentrasinya di atmosfer meningkat."
+            },
+            {
+                question: "Gas metana (CH4) merupakan gas rumah kaca yang kuat. Sumber utama emisi metana dari aktivitas manusia adalah...",
+                options: ["Industri semen", "Pembakaran biomassa", "Peternakan dan pengelolaan limbah organik", "Penggunaan pupuk nitrogen"],
+                correctAnswer: 2,
+                explanation: "Peternakan (terutama dari pencernaan hewan ruminansia) dan dekomposisi limbah organik di tempat pembuangan sampah merupakan sumber signifikan emisi gas metana."
+            },
+            {
+                question: "Perjanjian internasional yang bertujuan untuk mengurangi emisi gas rumah kaca adalah...",
+                options: ["Protokol Montreal", "Konvensi Ramsar", "Protokol Kyoto dan Perjanjian Paris", "Konvensi CITES"],
+                correctAnswer: 2,
+                explanation: "Protokol Kyoto dan Perjanjian Paris adalah dua perjanjian internasional utama yang bertujuan untuk mengatasi perubahan iklim dengan mengurangi emisi gas rumah kaca global."
+            },
+            {
+                question: "Energi yang tersimpan dalam inti atom disebut...",
+                options: ["Energi Kimia", "Energi Nuklir", "Energi Termal", "Energi Listrik"],
+                correctAnswer: 1,
+                explanation: "Energi nuklir adalah energi yang tersimpan dalam inti atom, yang dapat dilepaskan melalui reaksi nuklir seperti fisi (pembelahan inti) atau fusi (penggabungan inti)."
+            },
+            {
+                question: "Efisiensi sebuah mesin adalah 80%. Jika energi input yang diberikan adalah 1000 J, maka usaha yang dihasilkan adalah...",
+                options: ["1000 J", "800 J", "200 J", "1250 J"],
+                correctAnswer: 1,
+                explanation: "Efisiensi = (Usaha Output / Energi Input) * 100%. Jadi, Usaha Output = (Efisiensi/100%) * Energi Input = (80/100) * 1000 J = 800 J."
+            },
+            {
+                question: "Pemanfaatan energi angin untuk menghasilkan listrik menggunakan...",
+                options: ["Panel surya", "Reaktor nuklir", "Turbin angin", "Generator diesel"],
+                correctAnswer: 2,
+                explanation: "Turbin angin mengubah energi kinetik dari angin menjadi energi mekanik yang kemudian digunakan untuk memutar generator dan menghasilkan listrik."
+            },
+            {
+                question: "Istilah 'jejak karbon' mengacu pada...",
+                options: ["Jumlah karbon dalam tubuh manusia", "Total emisi gas rumah kaca yang dihasilkan oleh individu, organisasi, atau produk", "Bekas tapak kaki di tanah berkarbon", "Cadangan karbon di dalam bumi"],
+                correctAnswer: 1,
+                explanation: "Jejak karbon adalah ukuran total emisi gas rumah kaca (terutama CO2) yang secara langsung atau tidak langsung disebabkan oleh suatu aktivitas atau diakumulasikan selama siklus hidup suatu produk."
+            },
+            {
+                question: "Energi biomassa berasal dari...",
+                options: ["Bahan bakar fosil", "Material organik seperti tanaman dan limbah hewan", "Reaksi nuklir", "Panas dalam bumi"],
+                correctAnswer: 1,
+                explanation: "Biomassa adalah bahan organik yang berasal dari tumbuhan, hewan, dan mikroorganisme yang dapat digunakan sebagai sumber energi. Contohnya kayu bakar, limbah pertanian, dan biogas."
+            },
+            {
+                question: "Manakah dari berikut ini yang BUKAN merupakan contoh energi mekanik?",
+                options: ["Energi kinetik bola yang menggelinding", "Energi potensial buku di atas meja", "Energi panas dari api unggun", "Energi total pegas yang diregangkan"],
+                correctAnswer: 2,
+                explanation: "Energi mekanik adalah jumlah dari energi kinetik dan energi potensial. Energi panas dari api unggun adalah bentuk energi termal, bukan energi mekanik."
+            },
+            {
+                question: "Jika sebuah benda melakukan usaha sebesar 200 J dalam waktu 4 detik, maka daya yang dihasilkan adalah...",
+                options: ["50 Watt", "800 Watt", "0.02 Watt", "204 Watt"],
+                correctAnswer: 0,
+                explanation: "Daya (P) = Usaha (W) / Waktu (t). P = 200 J / 4 s = 50 Watt."
+            },
+            {
+                question: "Salah satu dampak mencairnya es di kutub akibat pemanasan global adalah...",
+                options: ["Penurunan suhu global", "Peningkatan salinitas air laut secara drastis", "Kenaikan permukaan air laut global", "Perluasan habitat beruang kutub"],
+                correctAnswer: 2,
+                explanation: "Mencairnya lapisan es besar di Greenland dan Antartika, serta gletser gunung, berkontribusi signifikan terhadap kenaikan permukaan air laut global, mengancam wilayah pesisir."
+            },
+            {
+                question: "Konsep '3R' dalam pengelolaan sampah untuk mengurangi dampak lingkungan adalah...",
+                options: ["Read, Write, Recite", "Reduce, Reuse, Recycle", "Run, Rest, Recover", "React, Respond, Report"],
+                correctAnswer: 1,
+                explanation: "3R (Reduce, Reuse, Recycle) adalah prinsip pengelolaan sampah yang bertujuan untuk mengurangi jumlah sampah (Reduce), menggunakan kembali barang (Reuse), dan mendaur ulang bahan menjadi produk baru (Recycle)."
+            },
+            {
+                question: "Energi yang berasal dari panas inti bumi disebut...",
+                options: ["Energi Surya", "Energi Hidroelektrik", "Energi Geotermal", "Energi Fosil"],
+                correctAnswer: 2,
+                explanation: "Energi geotermal adalah energi panas yang berasal dari dalam bumi. Energi ini dapat dimanfaatkan untuk pembangkit listrik atau pemanasan langsung."
+            },
+            {
+                question: "Pembakaran bahan bakar fosil melepaskan gas CO2. Proses alami yang dapat menyerap CO2 dari atmosfer adalah...",
+                options: ["Respirasi hewan", "Fotosintesis oleh tumbuhan", "Erupsi vulkanik", "Pembusukan organik anaerobik"],
+                correctAnswer: 1,
+                explanation: "Fotosintesis adalah proses di mana tumbuhan hijau, alga, dan beberapa bakteri menggunakan energi cahaya matahari untuk mengubah karbondioksida dan air menjadi glukosa (sumber energi) dan oksigen."
+            },
+            {
+                question: "Upaya mitigasi perubahan iklim berarti...",
+                options: ["Menyesuaikan diri dengan dampak perubahan iklim yang sudah terjadi", "Mengurangi emisi gas rumah kaca untuk membatasi tingkat pemanasan global di masa depan", "Mempelajari sejarah iklim bumi", "Mengabaikan isu perubahan iklim"],
+                correctAnswer: 1,
+                explanation: "Mitigasi perubahan iklim adalah upaya untuk mengurangi atau mencegah emisi gas rumah kaca (GRK) guna membatasi besarnya perubahan iklim di masa depan. Adaptasi adalah upaya menyesuaikan diri dengan dampak yang sudah atau akan terjadi."
+            }
+        ];
+
+        // --- Variabel Global ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questionsData = []; // Akan diisi dengan soal yang diacak
+
+        // --- Referensi Elemen DOM ---
+        const questionArea = document.getElementById('question-area');
+        const questionCounterEl = document.getElementById('question-counter');
+        const scoreEl = document.getElementById('score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackAreaEl = document.getElementById('feedback-area');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const nextQuestionButton = document.getElementById('next-question-button');
+        const resultsAreaEl = document.getElementById('results-area');
+        const finalScoreEl = document.getElementById('final-score');
+        const finalMessageEl = document.getElementById('final-message');
+        const restartQuizButton = document.getElementById('restart-quiz-button');
+        const navigationArea = document.getElementById('navigation-area'); // Ditambahkan untuk memperbaiki error
+
+        // --- Fungsi-Fungsi ---
+
+        // Fungsi untuk mengacak urutan array (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // Fungsi untuk memulai atau mereset kuis
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            questionsData = shuffleArray([...questions]); // Acak soal setiap kali kuis dimulai
+            updateScoreDisplay();
+            resultsAreaEl.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            feedbackAreaEl.classList.add('hidden');
+            navigationArea.classList.remove('hidden'); // Baris ini yang menyebabkan error jika navigationArea belum didefinisikan
+            loadQuestion();
+        }
+
+        // Fungsi untuk memuat pertanyaan
+        function loadQuestion() {
+            if (currentQuestionIndex < questionsData.length) {
+                const currentQuestion = questionsData[currentQuestionIndex];
+                questionCounterEl.textContent = `Soal ${currentQuestionIndex + 1} dari ${questionsData.length}`;
+                questionTextEl.textContent = currentQuestion.question;
+                optionsContainerEl.innerHTML = ''; // Kosongkan opsi sebelumnya
+
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option-button', 'w-full', 'text-left', 'p-3', 'bg-slate-100', 'hover:bg-sky-100', 'border', 'border-slate-300', 'rounded-lg', 'focus:outline-none', 'focus:ring-2', 'focus:ring-sky-500');
+                    button.dataset.index = index;
+                    button.addEventListener('click', selectAnswer);
+                    optionsContainerEl.appendChild(button);
+                });
+
+                feedbackAreaEl.classList.add('hidden');
+                nextQuestionButton.disabled = true;
+            } else {
+                showResults();
+            }
+        }
+
+        // Fungsi ketika jawaban dipilih
+        function selectAnswer(event) {
+            const selectedButton = event.target;
+            const selectedAnswerIndex = parseInt(selectedButton.dataset.index);
+            const correctAnswerIndex = questionsData[currentQuestionIndex].correctAnswer;
+
+            // Nonaktifkan semua tombol pilihan
+            Array.from(optionsContainerEl.children).forEach(button => {
+                button.disabled = true;
+                button.classList.remove('hover:bg-sky-100'); // Hapus efek hover
+            });
+            
+            selectedButton.classList.add('selected');
+
+            if (selectedAnswerIndex === correctAnswerIndex) {
+                score++;
+                selectedButton.classList.add('correct');
+                feedbackTextEl.textContent = "Benar!";
+                feedbackTextEl.className = 'text-xl font-bold mb-2 text-emerald-600';
+            } else {
+                selectedButton.classList.add('incorrect');
+                feedbackTextEl.textContent = "Salah!";
+                feedbackTextEl.className = 'text-xl font-bold mb-2 text-red-600';
+                // Tandai jawaban yang benar
+                const correctButton = optionsContainerEl.querySelector(`[data-index='${correctAnswerIndex}']`);
+                if (correctButton) {
+                    correctButton.classList.add('correct');
+                }
+            }
+
+            explanationTextEl.innerHTML = questionsData[currentQuestionIndex].explanation; // Gunakan innerHTML jika penjelasan mengandung format
+            feedbackAreaEl.classList.remove('hidden');
+            updateScoreDisplay();
+            nextQuestionButton.disabled = false;
+        }
+
+        // Fungsi untuk memperbarui tampilan skor
+        function updateScoreDisplay() {
+            scoreEl.textContent = `Skor: ${score}`;
+        }
+
+        // Fungsi untuk menampilkan hasil akhir
+        function showResults() {
+            questionArea.classList.add('hidden');
+            feedbackAreaEl.classList.add('hidden');
+            navigationArea.classList.add('hidden');
+            resultsAreaEl.classList.remove('hidden');
+
+            finalScoreEl.textContent = `Skor Akhir Anda: ${score} dari ${questionsData.length}`;
+            
+            let message = "";
+            const percentage = (score / questionsData.length) * 100;
+            if (percentage >= 80) {
+                message = "Luar biasa! Pemahaman Anda sangat baik!";
+                finalMessageEl.className = 'text-md mb-6 text-emerald-700';
+            } else if (percentage >= 60) {
+                message = "Bagus! Anda sudah memahami sebagian besar materi.";
+                finalMessageEl.className = 'text-md mb-6 text-sky-700';
+            } else if (percentage >= 40) {
+                message = "Cukup baik. Terus belajar dan tingkatkan lagi ya!";
+                finalMessageEl.className = 'text-md mb-6 text-amber-700';
+            } else {
+                message = "Jangan menyerah! Coba pelajari lagi materinya dan ulangi kuis ini.";
+                finalMessageEl.className = 'text-md mb-6 text-red-700';
+            }
+            finalMessageEl.textContent = message;
+        }
+
+        // Event Listener untuk tombol "Pertanyaan Berikutnya"
+        nextQuestionButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        // Event Listener untuk tombol "Mulai Ulang Kuis"
+        restartQuizButton.addEventListener('click', startQuiz);
+
+        // --- Inisialisasi Kuis ---
+        startQuiz();
+
+    </script>
+</body>
+</html>
